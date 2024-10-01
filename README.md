@@ -69,5 +69,4 @@ Inicia el servidor
 
 ## Autores 🧑🏻‍💻
 
-- [@Estebans441](https://www.github.com/Estebans441)
-- [@Moyano1711](https://www.github.com/Moyano1711)
+- [@juanfra312003](https://www.github.com/juanfra312003)
