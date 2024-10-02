@@ -2,7 +2,9 @@ package co.allconnected.fussiontech.productsservice.controllers;
 
 import co.allconnected.fussiontech.productsservice.dtos.ProductCreateDTO;
 import co.allconnected.fussiontech.productsservice.dtos.ProductDTO;
+import co.allconnected.fussiontech.productsservice.dtos.Response;
 import co.allconnected.fussiontech.productsservice.services.ProductService;
+import co.allconnected.fussiontech.productsservice.utils.OperationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,5 +30,17 @@ public class ProductsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(null);
         }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateProduct(@PathVariable String id, @ModelAttribute ProductCreateDTO product, @RequestParam(value = "photo_url", required = false) MultipartFile photo) {
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(productService.updateProduct(id, product, photo));
+        } catch (OperationException e) {
+            return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
+        }
+        
     }
 }

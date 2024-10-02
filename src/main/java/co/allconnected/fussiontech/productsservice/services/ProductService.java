@@ -23,6 +23,10 @@ public class ProductService {
         this.firebaseService = firebaseService;
     }
 
+    /*
+    OPERATIONS PRODUCTS
+     */
+    // Create a product
     public ProductDTO createProduct(ProductCreateDTO productDto, MultipartFile photo) throws IOException {
         Product product = new Product(productDto);
         if (photo != null && !photo.isEmpty()) {
@@ -32,4 +36,35 @@ public class ProductService {
         return new ProductDTO(productRepository.save(product));
     }
 
+    // Update a product
+    public ProductDTO updateProduct (String id, ProductCreateDTO productDTO, MultipartFile photo) throws IOException{
+        Optional<Product> productOptional = productRepository.findById(id);
+        if (productOptional.isPresent()){
+            Product product = productOptional.get();
+            product.setName(productDTO.getName());
+            product.setDescription(productDTO.getDescription());
+            product.setPrice((double) productDTO.getPrice());
+            product.setStock(productDTO.getStock());
+
+            if (photo != null && !photo.isEmpty()) {
+                if (product.getPhotoUrl() != null) {
+                    firebaseService.deleteImgProduct(product.getName(), product.getId().toString());
+                }
+                String extension = photo.getContentType();
+                product.setPhotoUrl(firebaseService.uploadImgProduct(product.getName(), product.getId().toString(), extension, photo));
+            }
+            return new ProductDTO(productRepository.save(product));
+        }
+        else{
+            throw new OperationException(404, "Product not found");
+        }
+    }
+
+     /*
+    OPERATIONS LABELS
+     */
+
+    /*
+    OPERATIONS REPORTS
+     */
 }
