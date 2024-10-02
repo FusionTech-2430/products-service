@@ -34,7 +34,6 @@ public class ProductService {
         }
         return new ProductDTO(productRepository.save(product));
     }
-
     // Update a product
     public ProductDTO updateProduct(String id, ProductCreateDTO productDTO, MultipartFile photo) throws IOException {
         Optional<Product> productOptional = productRepository.findById(id);
@@ -57,14 +56,12 @@ public class ProductService {
             throw new OperationException(404, "Product not found");
         }
     }
-
     // Get a product by id
     public ProductDTO getProduct(String id) {
         return productRepository.findById(id)
                 .map(ProductDTO::new)
                 .orElseThrow(() -> new OperationException(404, "Product not found"));
     }
-
     // Get all products
     public ProductDTO [] getProducts (){
         return productRepository.findAll()
@@ -72,7 +69,19 @@ public class ProductService {
                 .map(ProductDTO::new)
                 .toArray(ProductDTO[]::new);
     }
-
+    // Delete a product
+    public void deleteProduct(String id) {
+        Optional<Product> productOptional = productRepository.findById(id);
+        if (productOptional.isPresent()) {
+            Product product = productOptional.get();
+            if (product.getPhotoUrl() != null) {
+                firebaseService.deleteImgProduct(product.getName(), product.getId().toString());
+            }
+            productRepository.delete(product);
+        } else {
+            throw new OperationException(404, "Product not found");
+        }
+    }
      /*
     OPERATIONS LABELS
      */

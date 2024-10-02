@@ -72,4 +72,16 @@ public class ProductsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()));
         }
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteProduct(@PathVariable String id) {
+        try {
+            productService.deleteProduct(id);
+            return ResponseEntity.status(HttpStatus.OK).body(new Response(HttpStatus.OK.value(), "Product deleted"));
+        } catch (OperationException e) {
+            return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
+        }
+    }
 }
