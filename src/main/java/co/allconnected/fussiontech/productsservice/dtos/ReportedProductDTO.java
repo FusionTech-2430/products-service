@@ -8,7 +8,7 @@ import java.time.Instant;
 
 @Getter
 @Setter
-public class ReportedProductDto implements Serializable {
+public class ReportedProductDTO implements Serializable {
     private Integer id;
     private Integer productId;
     private String reason;
