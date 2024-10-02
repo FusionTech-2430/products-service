@@ -60,6 +60,12 @@ public class ProductService {
         }
     }
 
+    // Get a product by id
+    public ProductDTO getProduct (String id){
+        return productRepository.findById(id)
+                .map(ProductDTO::new)
+                .orElseThrow(() -> new OperationException(404, "Product not found"));
+
      /*
     OPERATIONS LABELS
      */

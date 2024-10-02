@@ -21,6 +21,10 @@ public class ProductsController {
         this.productService = productService;
     }
 
+    /*
+
+     */
+
     @PostMapping
     public ResponseEntity<ProductDTO> createProduct(@ModelAttribute ProductCreateDTO product, @RequestParam(value = "photo_url", required = false) MultipartFile photo) {
         try {
@@ -41,6 +45,17 @@ public class ProductsController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
         }
-        
+
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getProduct(@PathVariable String id) {
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(productService.getProduct(id));
+        } catch (OperationException e) {
+            return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
+        }
     }
 }
