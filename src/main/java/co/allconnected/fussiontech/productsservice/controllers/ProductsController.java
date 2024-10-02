@@ -58,4 +58,18 @@ public class ProductsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
         }
     }
+
+    @GetMapping
+    public ResponseEntity<?> getProducts() {
+        try {
+            ProductDTO[] listProductsDTO = productService.getProducts();
+            if (listProductsDTO.length == 0)
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response(HttpStatus.NOT_FOUND.value(), "No products found"));
+            return ResponseEntity.status(HttpStatus.OK).body(listProductsDTO);
+        } catch (OperationException e) {
+            return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()));
+        }
+    }
 }

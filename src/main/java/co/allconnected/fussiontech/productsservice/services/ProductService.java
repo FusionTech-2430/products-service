@@ -37,9 +37,9 @@ public class ProductService {
     }
 
     // Update a product
-    public ProductDTO updateProduct (String id, ProductCreateDTO productDTO, MultipartFile photo) throws IOException{
+    public ProductDTO updateProduct(String id, ProductCreateDTO productDTO, MultipartFile photo) throws IOException {
         Optional<Product> productOptional = productRepository.findById(id);
-        if (productOptional.isPresent()){
+        if (productOptional.isPresent()) {
             Product product = productOptional.get();
             product.setName(productDTO.getName());
             product.setDescription(productDTO.getDescription());
@@ -54,17 +54,25 @@ public class ProductService {
                 product.setPhotoUrl(firebaseService.uploadImgProduct(product.getName(), product.getId().toString(), extension, photo));
             }
             return new ProductDTO(productRepository.save(product));
-        }
-        else{
+        } else {
             throw new OperationException(404, "Product not found");
         }
     }
 
     // Get a product by id
-    public ProductDTO getProduct (String id){
+    public ProductDTO getProduct(String id) {
         return productRepository.findById(id)
                 .map(ProductDTO::new)
                 .orElseThrow(() -> new OperationException(404, "Product not found"));
+    }
+
+    // Get all products
+    public ProductDTO [] getProducts (){
+        return productRepository.findAll()
+                .stream()
+                .map(ProductDTO::new)
+                .toArray(ProductDTO[]::new);
+    }
 
      /*
     OPERATIONS LABELS
@@ -73,4 +81,5 @@ public class ProductService {
     /*
     OPERATIONS REPORTS
      */
+
 }
