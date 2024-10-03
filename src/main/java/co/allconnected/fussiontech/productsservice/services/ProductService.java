@@ -157,7 +157,6 @@ public class ProductService {
             throw new OperationException(404, "Product not found");
         }
     }
-
     public void deleteReport (String idProduct){
         Optional<ReportedProduct> reportOptional = reportsRepository.findById(String.valueOf(Integer.parseInt(idProduct)));
         if (reportOptional.isPresent()){
@@ -166,5 +165,10 @@ public class ProductService {
         else {
             throw new OperationException(404, "Report not found");
         }
+    }
+    public ReportedProductDTO getReport (String idProduct){
+        return reportsRepository.findById(String.valueOf(Integer.parseInt(idProduct)))
+                .map(ReportedProductDTO::new)
+                .orElseThrow(() -> new OperationException(404, "Report not found"));
     }
 }
