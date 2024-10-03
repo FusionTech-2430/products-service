@@ -72,6 +72,14 @@ public class ProductService {
                 .map(ProductDTO::new)
                 .toArray(ProductDTO[]::new);
     }
+    // Get all products from a business
+    public ProductDTO [] getProductsByBusiness(String businessId) {
+        return productRepository.findByIdBusiness(businessId)
+                .stream()
+                .map(ProductDTO::new)
+                .toArray(ProductDTO[]::new);
+    }
+
     // Delete a product
     public void deleteProduct(String id) {
         Optional<Product> productOptional = productRepository.findById(id);
