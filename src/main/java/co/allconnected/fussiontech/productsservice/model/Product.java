@@ -17,12 +17,12 @@ import java.util.UUID;
 @Table(name = "product", schema = "all_connected_products")
 public class Product {
     public Product (ProductCreateDTO dto){
-        this.idBusiness = dto.getIdBusiness();
-        this.name = dto.getName();
-        this.description = dto.getDescription();
-        this.stock = dto.getStock();
-        this.price = (double) dto.getPrice();
-        this.status = dto.getStatus();
+        this.idBusiness = UUID.fromString(dto.idBusiness());
+        this.name = dto.name();
+        this.description = dto.description();
+        this.stock = dto.stock();
+        this.price = (double) dto.price();
+        this.status = dto.status();
     }
 
 

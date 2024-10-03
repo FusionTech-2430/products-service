@@ -42,10 +42,10 @@ public class ProductService {
         Optional<Product> productOptional = productRepository.findById(id);
         if (productOptional.isPresent()) {
             Product product = productOptional.get();
-            product.setName(productDTO.getName());
-            product.setDescription(productDTO.getDescription());
-            product.setPrice((double) productDTO.getPrice());
-            product.setStock(productDTO.getStock());
+            product.setName(productDTO.name());
+            product.setDescription(productDTO.description());
+            product.setPrice((double) productDTO.price());
+            product.setStock(productDTO.stock());
 
             if (photo != null && !photo.isEmpty()) {
                 if (product.getPhotoUrl() != null) {
