@@ -1,7 +1,9 @@
 package co.allconnected.fussiontech.productsservice.services;
 import co.allconnected.fussiontech.productsservice.dtos.ProductCreateDTO;
 import co.allconnected.fussiontech.productsservice.dtos.ProductDTO;
+import co.allconnected.fussiontech.productsservice.model.Label;
 import co.allconnected.fussiontech.productsservice.model.Product;
+import co.allconnected.fussiontech.productsservice.repository.LabelRepository;
 import co.allconnected.fussiontech.productsservice.repository.ProductRepository;
 import co.allconnected.fussiontech.productsservice.utils.OperationException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,11 +16,13 @@ import java.util.Optional;
 public class ProductService {
     private final ProductRepository productRepository;
     private final FirebaseService firebaseService;
+    private final LabelRepository labelRepository;
 
     @Autowired
-    public ProductService(ProductRepository productRepository, FirebaseService firebaseService) {
+    public ProductService(ProductRepository productRepository, LabelRepository labelRepository, FirebaseService firebaseService) {
         this.productRepository = productRepository;
         this.firebaseService = firebaseService;
+        this.labelRepository = labelRepository;
     }
 
     /*
@@ -84,7 +88,24 @@ public class ProductService {
      /*
     OPERATIONS LABELS
      */
-
+    public void assignLabelToProduct(String productId, String labelId) {
+        Optional<Product> productOptional = productRepository.findById(productId);
+        Optional <Label> labelOptional = labelRepository.findById(labelId);
+        if (productOptional.isPresent() && labelOptional.isPresent()) {
+            Product product = productOptional.get();
+            Label label = labelOptional.get();
+            boolean relationshipExists = product.getLabels().stream()
+                    .anyMatch(l -> l.getId().equals(label.getId()));
+            if (!relationshipExists) {
+                product.getLabels().add(label);
+                productRepository.save(product);
+            } else {
+                throw new OperationException(409, "Label already assigned to product");
+            }
+        } else {
+            throw new OperationException(404, "Product or Label not found");
+        }
+    }
 
     /*
     OPERATIONS REPORTS

@@ -22,7 +22,7 @@ public class ProductsController {
     }
 
     /*
-    OPERATIONS PRODUCTS
+    CRUD PRODUCTS
      */
 
     @PostMapping
@@ -78,6 +78,22 @@ public class ProductsController {
         try {
             productService.deleteProduct(id);
             return ResponseEntity.status(HttpStatus.OK).body(new Response(HttpStatus.OK.value(), "Product deleted"));
+        } catch (OperationException e) {
+            return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
+        }
+    }
+
+    /*
+    OPERATIONS PRODUCTS
+    */
+    @PostMapping("({id_product}/labels/{id_label}")
+    public ResponseEntity<?> addLabel(@PathVariable String id_product, @PathVariable String id_label) {
+        try {
+            productService.assignLabelToProduct(id_product, id_label);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body("Label assigned to product successfully.");
         } catch (OperationException e) {
             return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
         } catch (Exception e) {
