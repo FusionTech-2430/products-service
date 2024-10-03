@@ -3,7 +3,8 @@ import co.allconnected.fussiontech.productsservice.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Collection;
+import java.util.UUID;
 
 public interface ProductRepository extends JpaRepository<Product, String> {
-Collection<Product> findByIdBusiness (String idBusiness);
+    public abstract Collection<Product> findByIdBusiness(UUID idBusiness);
 }

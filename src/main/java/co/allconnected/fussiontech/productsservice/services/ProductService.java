@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ProductService {
@@ -81,7 +82,7 @@ public class ProductService {
     }
     // Get all products from a business
     public ProductDTO [] getProductsByBusiness(String businessId) {
-        return productRepository.findByIdBusiness(businessId)
+        return productRepository.findByIdBusiness(UUID.fromString(businessId))
                 .stream()
                 .map(ProductDTO::new)
                 .toArray(ProductDTO[]::new);
