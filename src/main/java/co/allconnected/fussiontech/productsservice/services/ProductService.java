@@ -157,4 +157,13 @@ public class ProductService {
         }
     }
 
+    public void deleteReport (String idProduct){
+        Optional<ReportedProduct> reportOptional = reportsRepository.findById(String.valueOf(Integer.parseInt(idProduct)));
+        if (reportOptional.isPresent()){
+            reportsRepository.delete(reportOptional.get());
+        }
+        else {
+            throw new OperationException(404, "Report not found");
+        }
+    }
 }

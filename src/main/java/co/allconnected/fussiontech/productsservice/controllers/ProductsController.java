@@ -121,7 +121,7 @@ public class ProductsController {
     /*
     OPERATIONS PRODUCTS - REPORTS
     */
-    @PostMapping("/products/{id_product}/reports")
+    @PostMapping("/{id_product}/report")
     public ResponseEntity<?> addReport(@PathVariable String id_product, @ModelAttribute ReportedProductCreateDTO reportedProductCreateDTO){
         try {
             ReportedProductDTO reportedProductDTO = productService.reportProduct(id_product, reportedProductCreateDTO);
@@ -132,4 +132,17 @@ public class ProductsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
         }
     }
+
+    @DeleteMapping("/{id_product}/report")
+    public ResponseEntity<?> deleteReport(@PathVariable String id_product){
+        try {
+            productService.deleteReport(id_product);
+            return ResponseEntity.status(HttpStatus.OK).body(new Response(HttpStatus.OK.value(), "Report deleted"));
+        } catch (OperationException e) {
+            return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
+        }
+    }
+
 }
