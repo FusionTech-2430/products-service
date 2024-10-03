@@ -1,15 +1,20 @@
 package co.allconnected.fussiontech.productsservice.services;
 import co.allconnected.fussiontech.productsservice.dtos.ProductCreateDTO;
 import co.allconnected.fussiontech.productsservice.dtos.ProductDTO;
+import co.allconnected.fussiontech.productsservice.dtos.ReportedProductCreateDTO;
+import co.allconnected.fussiontech.productsservice.dtos.ReportedProductDTO;
 import co.allconnected.fussiontech.productsservice.model.Label;
 import co.allconnected.fussiontech.productsservice.model.Product;
+import co.allconnected.fussiontech.productsservice.model.ReportedProduct;
 import co.allconnected.fussiontech.productsservice.repository.LabelRepository;
 import co.allconnected.fussiontech.productsservice.repository.ProductRepository;
+import co.allconnected.fussiontech.productsservice.repository.ReportsRepository;
 import co.allconnected.fussiontech.productsservice.utils.OperationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Optional;
 
 @Service
@@ -17,12 +22,14 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final FirebaseService firebaseService;
     private final LabelRepository labelRepository;
+    private final ReportsRepository reportsRepository;
 
     @Autowired
-    public ProductService(ProductRepository productRepository, LabelRepository labelRepository, FirebaseService firebaseService) {
+    public ProductService(ProductRepository productRepository, LabelRepository labelRepository, ReportsRepository reportsRepository, FirebaseService firebaseService) {
         this.productRepository = productRepository;
         this.firebaseService = firebaseService;
         this.labelRepository = labelRepository;
+        this.reportsRepository = reportsRepository;
     }
 
     /*
@@ -137,5 +144,17 @@ public class ProductService {
     /*
     OPERATIONS REPORTS
      */
+    public ReportedProductDTO reportProduct (String idProduct, ReportedProductCreateDTO reportedDTO){
+        Optional<Product> productOptional = productRepository.findById(String.valueOf(idProduct));
+        if (productOptional.isPresent()){
+            ReportedProduct reportedProduct = new ReportedProduct(reportedDTO);
+            reportedProduct.setId(Integer.parseInt(idProduct));
+            reportedProduct.setReportDate(Instant.now());
+            return new ReportedProductDTO(reportsRepository.save(reportedProduct));
+        }
+        else {
+            throw new OperationException(404, "Product not found");
+        }
+    }
 
 }

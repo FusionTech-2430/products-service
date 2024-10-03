@@ -1,8 +1,6 @@
 package co.allconnected.fussiontech.productsservice.controllers;
 
-import co.allconnected.fussiontech.productsservice.dtos.ProductCreateDTO;
-import co.allconnected.fussiontech.productsservice.dtos.ProductDTO;
-import co.allconnected.fussiontech.productsservice.dtos.Response;
+import co.allconnected.fussiontech.productsservice.dtos.*;
 import co.allconnected.fussiontech.productsservice.services.ProductService;
 import co.allconnected.fussiontech.productsservice.utils.OperationException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +22,6 @@ public class ProductsController {
     /*
     CRUD PRODUCTS
      */
-
     @PostMapping
     public ResponseEntity<ProductDTO> createProduct(@ModelAttribute ProductCreateDTO product, @RequestParam(value = "photo_url", required = false) MultipartFile photo) {
         try {
@@ -35,7 +32,6 @@ public class ProductsController {
                     .body(null);
         }
     }
-
     @PutMapping("/{id}")
     public ResponseEntity<?> updateProduct(@PathVariable String id, @ModelAttribute ProductCreateDTO product, @RequestParam(value = "photo_url", required = false) MultipartFile photo) {
         try {
@@ -95,9 +91,8 @@ public class ProductsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
         }
     }
-
     /*
-    OPERATIONS PRODUCTS
+    OPERATIONS PRODUCTS - LABELS
     */
     @PostMapping("({id_product}/labels/{id_label}")
     public ResponseEntity<?> addLabel(@PathVariable String id_product, @PathVariable String id_label) {
@@ -117,6 +112,20 @@ public class ProductsController {
             productService.deleteLabelFromProduct(id_product, id_label);
             return ResponseEntity.status(HttpStatus.OK)
                     .body("Label deleted from product successfully.");
+        } catch (OperationException e) {
+            return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
+        }
+    }
+    /*
+    OPERATIONS PRODUCTS - REPORTS
+    */
+    @PostMapping("/products/{id_product}/reports")
+    public ResponseEntity<?> addReport(@PathVariable String id_product, @ModelAttribute ReportedProductCreateDTO reportedProductCreateDTO){
+        try {
+            ReportedProductDTO reportedProductDTO = productService.reportProduct(id_product, reportedProductCreateDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(reportedProductDTO);
         } catch (OperationException e) {
             return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
         } catch (Exception e) {
