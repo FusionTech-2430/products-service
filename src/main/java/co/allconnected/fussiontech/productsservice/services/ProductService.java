@@ -107,6 +107,25 @@ public class ProductService {
         }
     }
 
+    public void deleteLabelFromProduct(String productId, String labelId) {
+        Optional<Product> productOptional = productRepository.findById(productId);
+        Optional <Label> labelOptional = labelRepository.findById(labelId);
+        if (productOptional.isPresent() && labelOptional.isPresent()) {
+            Product product = productOptional.get();
+            Label label = labelOptional.get();
+            boolean relationshipExists = product.getLabels().stream()
+                    .anyMatch(l -> l.getId().equals(label.getId()));
+            if (relationshipExists) {
+                product.getLabels().remove(label);
+                productRepository.save(product);
+            } else {
+                throw new OperationException(409, "Label not assigned to product");
+            }
+        } else {
+            throw new OperationException(404, "Product or Label not found");
+        }
+    }
+
     /*
     OPERATIONS REPORTS
      */
