@@ -44,4 +44,13 @@ public class LabelService {
                 .map(LabelDTO::new)
                 .toArray(LabelDTO[]::new);
     }
+    public void deleteLabel (String id){
+        Optional <Label> labelOptional = labelRepository.findById(id);
+        if (labelOptional.isPresent()) {
+            Label label = labelOptional.get();
+            labelRepository.delete(label);
+        } else {
+            throw new OperationException(404, "Label not found");
+        }
+    }
 }
