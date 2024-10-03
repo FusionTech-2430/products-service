@@ -32,4 +32,10 @@ public class LabelService {
             throw new OperationException(404, "Label not found");
         }
     }
+    // Get a label by id
+    public LabelDTO getLabel(String id) {
+        return labelRepository.findById(id)
+                .map(LabelDTO::new)
+                .orElseThrow(() -> new OperationException(404, "Label not found"));
+    }
 }
