@@ -171,4 +171,10 @@ public class ProductService {
                 .map(ReportedProductDTO::new)
                 .orElseThrow(() -> new OperationException(404, "Report not found"));
     }
+    public ReportedProductDTO[] getReports (){
+        return reportsRepository.findAll()
+                .stream()
+                .map(ReportedProductDTO::new)
+                .toArray(ReportedProductDTO[]::new);
+    }
 }
