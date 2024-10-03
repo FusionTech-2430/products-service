@@ -1,5 +1,4 @@
 package co.allconnected.fussiontech.productsservice.services;
-
 import co.allconnected.fussiontech.productsservice.dtos.ProductCreateDTO;
 import co.allconnected.fussiontech.productsservice.dtos.ProductDTO;
 import co.allconnected.fussiontech.productsservice.model.Product;

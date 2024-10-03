@@ -1,13 +1,13 @@
 package co.allconnected.fussiontech.productsservice.controllers;
 
 import co.allconnected.fussiontech.productsservice.dtos.LabelDTO;
+import co.allconnected.fussiontech.productsservice.dtos.Response;
 import co.allconnected.fussiontech.productsservice.services.LabelService;
+import co.allconnected.fussiontech.productsservice.utils.OperationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/labels")
@@ -29,5 +29,16 @@ public class LabelsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
-
+    
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateLabel (@PathVariable String id, @ModelAttribute LabelDTO labelDTO){
+        try{
+            return ResponseEntity.status(HttpStatus.OK).body(labelService.updateLabel(id, labelDTO));
+        }
+        catch (OperationException e) {
+            return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
+        }
+    }
 }
