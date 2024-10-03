@@ -38,4 +38,10 @@ public class LabelService {
                 .map(LabelDTO::new)
                 .orElseThrow(() -> new OperationException(404, "Label not found"));
     }
+    // Get all labels
+    public LabelDTO [] getLabels() {
+        return labelRepository.findAll().stream()
+                .map(LabelDTO::new)
+                .toArray(LabelDTO[]::new);
+    }
 }
