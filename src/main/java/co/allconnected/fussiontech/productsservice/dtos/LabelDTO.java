@@ -8,14 +8,22 @@ import java.io.Serializable;
 
 @Getter
 @Setter
+
 public class LabelDTO implements Serializable {
     Integer id;
     String label;
     String [] products;
+
+    public LabelDTO(){
+
+    }
 
     public LabelDTO(Label label){
         this.id = label.getId();
         this.label = label.getLabel();
         this.products = label.getProducts().stream().map(Product::getName).toArray(String[]::new);
     }
+
+
+
 }

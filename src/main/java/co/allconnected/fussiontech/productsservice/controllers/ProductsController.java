@@ -28,6 +28,7 @@ public class ProductsController {
             ProductDTO productDTO = productService.createProduct(product, photo);
             return ResponseEntity.status(HttpStatus.CREATED).body(productDTO);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(null);
         }

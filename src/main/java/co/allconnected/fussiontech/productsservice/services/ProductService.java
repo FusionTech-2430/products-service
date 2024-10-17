@@ -39,12 +39,24 @@ public class ProductService {
     // Create a product
     public ProductDTO createProduct(ProductCreateDTO productDto, MultipartFile photo) throws IOException {
         Product product = new Product(productDto);
-        if (photo != null && !photo.isEmpty()) {
-            String extension = photo.getContentType();
-            product.setPhotoUrl(firebaseService.uploadImgProduct(product.getName(), product.getId().toString(), extension, photo));
+        System.out.println("Product name: " + productDto.name());
+        try {
+            if (photo != null && !photo.isEmpty()) {
+                String extension = photo.getContentType();
+                product.setPhotoUrl(firebaseService.uploadImgProduct(product.getName(), product.getId().toString(), extension, photo));
+            }
+        } catch (Exception e) {
+            e.printStackTrace(); // Asegúrate de que cualquier error relacionado con la subida de la foto se capture y se imprima.
         }
-        return new ProductDTO(productRepository.save(product));
+
+        try {
+            return new ProductDTO(productRepository.save(product));
+        } catch (Exception e) {
+            e.printStackTrace(); // Asegúrate de que cualquier error relacionado con la base de datos se capture y se imprima.
+            throw new IOException("Error al guardar el producto", e); // Lanza una excepción si es necesario.
+        }
     }
+
     // Update a product
     public ProductDTO updateProduct(String id, ProductCreateDTO productDTO, MultipartFile photo) throws IOException {
         Optional<Product> productOptional = productRepository.findById(id);
