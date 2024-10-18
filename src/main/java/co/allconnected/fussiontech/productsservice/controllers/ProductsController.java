@@ -23,17 +23,19 @@ public class ProductsController {
     CRUD PRODUCTS
      */
     @PostMapping
-    public ResponseEntity<ProductDTO> createProduct(@ModelAttribute ProductCreateDTO product, @RequestParam(value = "photo_url", required = false) MultipartFile photo) {
+    public ResponseEntity<ProductDTO> createProduct(@ModelAttribute ProductCreateDTO product, @RequestParam(value = "photo", required = false) MultipartFile photo) {
         try {
+            System.out.println(product.idBusiness());
             ProductDTO productDTO = productService.createProduct(product, photo);
             return ResponseEntity.status(HttpStatus.CREATED).body(productDTO);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(null);
         }
     }
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateProduct(@PathVariable String id, @ModelAttribute ProductCreateDTO product, @RequestParam(value = "photo_url", required = false) MultipartFile photo) {
+    public ResponseEntity<?> updateProduct(@PathVariable String id, @ModelAttribute ProductCreateDTO product, @RequestParam(value = "photo", required = false) MultipartFile photo) {
         try {
             return ResponseEntity.status(HttpStatus.OK).body(productService.updateProduct(id, product, photo));
         } catch (OperationException e) {
@@ -41,8 +43,8 @@ public class ProductsController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
         }
-
     }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getProduct(@PathVariable String id) {
         try {
@@ -94,7 +96,7 @@ public class ProductsController {
     /*
     OPERATIONS PRODUCTS - LABELS
     */
-    @PostMapping("({id_product}/labels/{id_label}")
+    @PostMapping("/{id_product}/labels/{id_label}")
     public ResponseEntity<?> addLabel(@PathVariable String id_product, @PathVariable String id_label) {
         try {
             productService.assignLabelToProduct(id_product, id_label);
@@ -106,7 +108,7 @@ public class ProductsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
         }
     }
-    @DeleteMapping("/{id_product}/labels/{id_label}")
+    @DeleteMapping("/{id_product}/labels/{id_label}/delete")
     public ResponseEntity<?> deleteLabel(@PathVariable String id_product, @PathVariable String id_label) {
         try {
             productService.deleteLabelFromProduct(id_product, id_label);
@@ -122,10 +124,21 @@ public class ProductsController {
     OPERATIONS PRODUCTS - REPORTS
     */
     @PostMapping("/{id_product}/report")
-    public ResponseEntity<?> addReport(@PathVariable String id_product, @ModelAttribute ReportedProductCreateDTO reportedProductCreateDTO){
+    public ResponseEntity<?> addReport(@PathVariable String id_product, @RequestBody ReportedProductCreateDTO reportedProductCreateDTO){
         try {
             ReportedProductDTO reportedProductDTO = productService.reportProduct(id_product, reportedProductCreateDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(reportedProductDTO);
+        } catch (OperationException e) {
+            return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
+        }
+    }
+    @PutMapping("/{id_product}/report")
+    public ResponseEntity<?> updateReport(@PathVariable String id_product, @RequestBody ReportedProductCreateDTO reportedProductCreateDTO){
+        try {
+            ReportedProductDTO reportedProductDTO = productService.updateProductReport(id_product, reportedProductCreateDTO);
+            return ResponseEntity.status(HttpStatus.OK).body(reportedProductDTO);
         } catch (OperationException e) {
             return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
         } catch (Exception e) {

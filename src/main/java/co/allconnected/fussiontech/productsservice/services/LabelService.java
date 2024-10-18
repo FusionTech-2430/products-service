@@ -22,11 +22,11 @@ public class LabelService {
         return new LabelDTO(labelRepository.save(label));
     }
     // Update a label
-    public LabelDTO updateLabel(String id, LabelDTO labelDTO){
+    public LabelDTO updateLabel(String id, String labelText){
         Optional <Label> labelOptional = labelRepository.findById(id);
         if (labelOptional.isPresent()) {
             Label label = labelOptional.get();
-            label.setLabel(labelDTO.getLabel());
+            label.setLabel(labelText);
             return new LabelDTO(labelRepository.save(label));
         } else {
             throw new OperationException(404, "Label not found");

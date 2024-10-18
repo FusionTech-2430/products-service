@@ -16,16 +16,14 @@ import java.util.UUID;
 @NoArgsConstructor
 @Table(name = "product", schema = "all_connected_products")
 public class Product {
-    public Product (ProductCreateDTO dto){
-        this.idBusiness = UUID.fromString(dto.idBusiness());
+    public Product (ProductCreateDTO dto) {
+        this.idBusiness = dto.idBusiness();
         this.name = dto.name();
         this.description = dto.description();
         this.stock = dto.stock();
-        this.price = (double) dto.price();
+        this.price = dto.price();
         this.status = dto.status();
     }
-
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_product", nullable = false)
@@ -55,9 +53,4 @@ public class Product {
     @ManyToMany(mappedBy = "products")
     private Set<Label> labels = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "idProduct")
-    private Set<Rating> ratings = new LinkedHashSet<>();
-
-    @OneToOne(mappedBy = "product")
-    private ReportedProduct reportedProduct;
 }
