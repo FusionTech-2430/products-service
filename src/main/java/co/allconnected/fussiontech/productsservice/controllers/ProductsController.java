@@ -34,16 +34,17 @@ public class ProductsController {
         }
     }
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateProduct(@PathVariable String id, @ModelAttribute ProductCreateDTO product, @RequestParam(value = "photo_url", required = false) MultipartFile photo) {
+    public ResponseEntity<?> updateProduct(@PathVariable String id, @ModelAttribute ProductCreateDTO product, @RequestParam(value = "photo", required = false) MultipartFile photo) {
         try {
+            //System.out.println("Holaaa" + photo.getName());
             return ResponseEntity.status(HttpStatus.OK).body(productService.updateProduct(id, product, photo));
         } catch (OperationException e) {
             return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
         }
-
     }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getProduct(@PathVariable String id) {
         try {

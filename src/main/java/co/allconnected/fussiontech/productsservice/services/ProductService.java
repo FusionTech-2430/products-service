@@ -69,10 +69,13 @@ public class ProductService {
 
             if (photo != null && !photo.isEmpty()) {
                 if (product.getPhotoUrl() != null) {
-                    firebaseService.deleteImgProduct(product.getName(), product.getId().toString());
+                    firebaseService.deleteImgProduct(String.valueOf(product.getIdBusiness()), product.getId().toString());
                 }
                 String extension = photo.getContentType();
-                product.setPhotoUrl(firebaseService.uploadImgProduct(product.getName(), product.getId().toString(), extension, photo));
+                // Quit the prefix image/ from the extension
+                assert extension != null;
+                extension = extension.substring(6);
+                product.setPhotoUrl(firebaseService.uploadImgProduct(String.valueOf(product.getIdBusiness()), product.getId().toString(), extension, photo));
             }
             return new ProductDTO(productRepository.save(product));
         } else {
