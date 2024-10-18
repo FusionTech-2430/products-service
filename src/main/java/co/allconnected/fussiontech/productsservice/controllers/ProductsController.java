@@ -123,10 +123,21 @@ public class ProductsController {
     OPERATIONS PRODUCTS - REPORTS
     */
     @PostMapping("/{id_product}/report")
-    public ResponseEntity<?> addReport(@PathVariable String id_product, @ModelAttribute ReportedProductCreateDTO reportedProductCreateDTO){
+    public ResponseEntity<?> addReport(@PathVariable String id_product, @RequestBody ReportedProductCreateDTO reportedProductCreateDTO){
         try {
             ReportedProductDTO reportedProductDTO = productService.reportProduct(id_product, reportedProductCreateDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(reportedProductDTO);
+        } catch (OperationException e) {
+            return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
+        }
+    }
+    @PutMapping("/{id_product}/report")
+    public ResponseEntity<?> updateReport(@PathVariable String id_product, @RequestBody ReportedProductCreateDTO reportedProductCreateDTO){
+        try {
+            ReportedProductDTO reportedProductDTO = productService.updateProductReport(id_product, reportedProductCreateDTO);
+            return ResponseEntity.status(HttpStatus.OK).body(reportedProductDTO);
         } catch (OperationException e) {
             return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
         } catch (Exception e) {

@@ -161,18 +161,42 @@ public class ProductService {
     /*
     OPERATIONS REPORTS
      */
-    public ReportedProductDTO reportProduct (String idProduct, ReportedProductCreateDTO reportedDTO){
-        Optional<Product> productOptional = productRepository.findById(String.valueOf(idProduct));
-        if (productOptional.isPresent()){
+    public ReportedProductDTO reportProduct(String idProduct, ReportedProductCreateDTO reportedDTO) {
+        Optional<Product> productOptional = productRepository.findById(String.valueOf(Integer.parseInt(idProduct)));
+
+        if (productOptional.isPresent()) {
+            Product product = productOptional.get();
+            System.out.println(reportedDTO.reason());
+            System.out.println(reportedDTO.description());
             ReportedProduct reportedProduct = new ReportedProduct(reportedDTO);
-            reportedProduct.setId(Integer.parseInt(idProduct));
+
+            reportedProduct.setProduct(product);
+            reportedProduct.setDescription(reportedDTO.description());
+            reportedProduct.setReason(reportedDTO.reason());
             reportedProduct.setReportDate(Instant.now());
-            return new ReportedProductDTO(reportsRepository.save(reportedProduct));
-        }
-        else {
+
+            ReportedProduct savedReportedProduct = reportsRepository.save(reportedProduct);
+
+            return new ReportedProductDTO(savedReportedProduct);
+        } else {
             throw new OperationException(404, "Product not found");
         }
     }
+
+    public ReportedProductDTO updateProductReport (String idProduct, ReportedProductCreateDTO reportedDTO){
+        Optional<ReportedProduct> reportOptional = reportsRepository.findById(String.valueOf(Integer.parseInt(idProduct)));
+        if (reportOptional.isPresent()){
+            ReportedProduct report = reportOptional.get();
+            report.setReason(reportedDTO.reason());
+            report.setDescription(reportedDTO.description());
+            return new ReportedProductDTO(reportsRepository.save(report));
+        }
+        else {
+            throw new OperationException(404, "Report not found");
+        }
+    }
+
+
     public void deleteReport (String idProduct){
         Optional<ReportedProduct> reportOptional = reportsRepository.findById(String.valueOf(Integer.parseInt(idProduct)));
         if (reportOptional.isPresent()){
