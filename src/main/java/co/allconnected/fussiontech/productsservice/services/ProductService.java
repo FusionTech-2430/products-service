@@ -116,24 +116,26 @@ public class ProductService {
      /*
     OPERATIONS LABELS
      */
-    public void assignLabelToProduct(String productId, String labelId) {
-        Optional<Product> productOptional = productRepository.findById(productId);
-        Optional <Label> labelOptional = labelRepository.findById(labelId);
-        if (productOptional.isPresent() && labelOptional.isPresent()) {
-            Product product = productOptional.get();
-            Label label = labelOptional.get();
-            boolean relationshipExists = product.getLabels().stream()
-                    .anyMatch(l -> l.getId().equals(label.getId()));
-            if (!relationshipExists) {
-                product.getLabels().add(label);
-                productRepository.save(product);
-            } else {
-                throw new OperationException(409, "Label already assigned to product");
-            }
-        } else {
-            throw new OperationException(404, "Product or Label not found");
-        }
-    }
+     public void assignLabelToProduct(String productId, String labelId) {
+         Optional<Product> productOptional = productRepository.findById(productId);
+         Optional<Label> labelOptional = labelRepository.findById(labelId);
+         if (productOptional.isPresent() && labelOptional.isPresent()) {
+             Product product = productOptional.get();
+             Label label = labelOptional.get();
+             boolean relationshipExists = product.getLabels().stream()
+                     .anyMatch(l -> l.getId().equals(label.getId()));
+             if (!relationshipExists) {
+                 product.getLabels().add(label);
+                 label.getProducts().add(product);
+                 productRepository.save(product);
+                 labelRepository.save(label);
+             } else {
+                 throw new OperationException(409, "Label already assigned to product");
+             }
+         } else {
+             throw new OperationException(404, "Product or Label not found");
+         }
+     }
 
     public void deleteLabelFromProduct(String productId, String labelId) {
         Optional<Product> productOptional = productRepository.findById(productId);
@@ -145,7 +147,9 @@ public class ProductService {
                     .anyMatch(l -> l.getId().equals(label.getId()));
             if (relationshipExists) {
                 product.getLabels().remove(label);
+                label.getProducts().remove(product);
                 productRepository.save(product);
+                labelRepository.save(label);
             } else {
                 throw new OperationException(409, "Label not assigned to product");
             }

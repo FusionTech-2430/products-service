@@ -34,10 +34,9 @@ public class LabelsController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateLabel(@PathVariable String id, @RequestBody LabelDTO labelDTO) {
+    public ResponseEntity<?> updateLabel(@PathVariable String id, @RequestParam String name) {
         try {
-            System.out.println("Label name: " + labelDTO.getLabel());
-            return ResponseEntity.status(HttpStatus.OK).body(labelService.updateLabel(id, labelDTO));
+            return ResponseEntity.status(HttpStatus.OK).body(labelService.updateLabel(id, name));
         } catch (OperationException e) {
             return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
         } catch (Exception e) {

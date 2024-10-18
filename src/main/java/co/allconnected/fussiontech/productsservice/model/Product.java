@@ -24,8 +24,6 @@ public class Product {
         this.price = dto.price();
         this.status = dto.status();
     }
-
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_product", nullable = false)
@@ -55,9 +53,4 @@ public class Product {
     @ManyToMany(mappedBy = "products")
     private Set<Label> labels = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "idProduct")
-    private Set<Rating> ratings = new LinkedHashSet<>();
-
-    @OneToOne(mappedBy = "product")
-    private ReportedProduct reportedProduct;
 }

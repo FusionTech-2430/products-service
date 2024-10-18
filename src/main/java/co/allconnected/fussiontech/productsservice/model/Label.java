@@ -14,9 +14,10 @@ import java.util.Set;
 @NoArgsConstructor
 @Table(name = "label", schema = "all_connected_products")
 public class Label {
-    public Label (String label){
+    public Label(String label) {
         this.label = label;
     }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_label", nullable = false)
@@ -27,6 +28,7 @@ public class Label {
 
     @ManyToMany
     @JoinTable(name = "product_label",
+            schema = "all_connected_products", // Agrega el esquema explícitamente
             joinColumns = @JoinColumn(name = "id_label"),
             inverseJoinColumns = @JoinColumn(name = "id_announcement"))
     private Set<Product> products = new LinkedHashSet<>();

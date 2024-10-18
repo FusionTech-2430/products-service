@@ -95,7 +95,7 @@ public class ProductsController {
     /*
     OPERATIONS PRODUCTS - LABELS
     */
-    @PostMapping("({id_product}/labels/{id_label}")
+    @PostMapping("/{id_product}/labels/{id_label}")
     public ResponseEntity<?> addLabel(@PathVariable String id_product, @PathVariable String id_label) {
         try {
             productService.assignLabelToProduct(id_product, id_label);
@@ -107,7 +107,7 @@ public class ProductsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
         }
     }
-    @DeleteMapping("/{id_product}/labels/{id_label}")
+    @DeleteMapping("/{id_product}/labels/{id_label}/delete")
     public ResponseEntity<?> deleteLabel(@PathVariable String id_product, @PathVariable String id_label) {
         try {
             productService.deleteLabelFromProduct(id_product, id_label);
