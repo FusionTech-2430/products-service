@@ -23,8 +23,9 @@ public class ProductsController {
     CRUD PRODUCTS
      */
     @PostMapping
-    public ResponseEntity<ProductDTO> createProduct(@ModelAttribute ProductCreateDTO product, @RequestParam(value = "photo_url", required = false) MultipartFile photo) {
+    public ResponseEntity<ProductDTO> createProduct(@ModelAttribute ProductCreateDTO product, @RequestParam(value = "photo", required = false) MultipartFile photo) {
         try {
+            System.out.println(product.idBusiness());
             ProductDTO productDTO = productService.createProduct(product, photo);
             return ResponseEntity.status(HttpStatus.CREATED).body(productDTO);
         } catch (Exception e) {
@@ -36,7 +37,6 @@ public class ProductsController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateProduct(@PathVariable String id, @ModelAttribute ProductCreateDTO product, @RequestParam(value = "photo", required = false) MultipartFile photo) {
         try {
-            //System.out.println("Holaaa" + photo.getName());
             return ResponseEntity.status(HttpStatus.OK).body(productService.updateProduct(id, product, photo));
         } catch (OperationException e) {
             return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));

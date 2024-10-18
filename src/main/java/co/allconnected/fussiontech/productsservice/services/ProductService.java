@@ -39,11 +39,13 @@ public class ProductService {
     // Create a product
     public ProductDTO createProduct(ProductCreateDTO productDto, MultipartFile photo) throws IOException {
         Product product = new Product(productDto);
-        System.out.println("Product name: " + productDto.name());
+        // System.out.println("Product name: " + productDto.name());
         try {
             if (photo != null && !photo.isEmpty()) {
                 String extension = photo.getContentType();
-                product.setPhotoUrl(firebaseService.uploadImgProduct(product.getName(), product.getId().toString(), extension, photo));
+                assert extension != null;
+                extension = extension.substring(6);
+                product.setPhotoUrl(firebaseService.uploadImgProduct(String.valueOf(product.getIdBusiness()), product.getName(), extension, photo));
             }
         } catch (Exception e) {
             e.printStackTrace(); // Asegúrate de que cualquier error relacionado con la subida de la foto se capture y se imprima.
@@ -69,7 +71,7 @@ public class ProductService {
 
             if (photo != null && !photo.isEmpty()) {
                 if (product.getPhotoUrl() != null) {
-                    firebaseService.deleteImgProduct(String.valueOf(product.getIdBusiness()), product.getId().toString());
+                    firebaseService.deleteImgProduct(String.valueOf(product.getIdBusiness()),product.getName());
                 }
                 String extension = photo.getContentType();
                 // Quit the prefix image/ from the extension
