@@ -58,7 +58,7 @@ public class ProductService {
             }
             return dto;
         } catch (Exception e) {
-            throw new IOException("Error al guardar el producto", e); // Lanza una excepción si es necesario.
+            throw new IOException("Error creating the product", e);
         }
     }
 
