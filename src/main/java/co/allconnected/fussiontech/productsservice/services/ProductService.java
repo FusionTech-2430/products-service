@@ -4,10 +4,7 @@ import co.allconnected.fussiontech.productsservice.model.Label;
 import co.allconnected.fussiontech.productsservice.model.Product;
 import co.allconnected.fussiontech.productsservice.model.Rating;
 import co.allconnected.fussiontech.productsservice.model.ReportedProduct;
-import co.allconnected.fussiontech.productsservice.repository.LabelRepository;
-import co.allconnected.fussiontech.productsservice.repository.ProductLabelRepository;
-import co.allconnected.fussiontech.productsservice.repository.ProductRepository;
-import co.allconnected.fussiontech.productsservice.repository.ReportsRepository;
+import co.allconnected.fussiontech.productsservice.repository.*;
 import co.allconnected.fussiontech.productsservice.utils.OperationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,14 +22,16 @@ public class ProductService {
     private final LabelRepository labelRepository;
     private final ReportsRepository reportsRepository;
     private final ProductLabelRepository productLabelRepository;
+    private final RatingRepository ratingRepository;
 
     @Autowired
-    public ProductService(ProductRepository productRepository, LabelRepository labelRepository, ReportsRepository reportsRepository, FirebaseService firebaseService, ProductLabelRepository productLabelRepository) {
+    public ProductService(ProductRepository productRepository, LabelRepository labelRepository,  FirebaseService firebaseService, ProductLabelRepository productLabelRepository, RatingRepository ratingRepository, ReportsRepository reportsRepository) {
         this.productRepository = productRepository;
         this.firebaseService = firebaseService;
         this.labelRepository = labelRepository;
         this.reportsRepository = reportsRepository;
         this.productLabelRepository = productLabelRepository;
+        this.ratingRepository = ratingRepository;
     }
 
     /*
@@ -228,16 +227,28 @@ public class ProductService {
     /*
     OPERATIONS RATINGS
      */
-    public RatingDTO addRating (String idProduct, RatingCreateDTO rating) {
-        Optional<Product> productOptional = productRepository.findById(idProduct);
+    public RatingDTO rateProduct(String productId, RatingCreateDTO ratingDTO) {
+        Optional<Product> productOptional = productRepository.findById(productId);
         if (productOptional.isPresent()) {
             Product product = productOptional.get();
-            Rating ratingCreate = new Rating(rating);
-            product.getRatings().add(ratingCreate);
+            Rating rating = new Rating(ratingDTO);
+            rating.setIdProduct(product);
+            rating.setDate(Instant.now());
+            Rating savedRating = ratingRepository.save(rating);
+
+            product.getRatings().add(savedRating);
             productRepository.save(product);
-            return new RatingDTO(ratingCreate);
+
+            return new RatingDTO(savedRating);
         } else {
             throw new OperationException(404, "Product not found");
         }
+    }
+    public RatingDTO [] getAllRating(){
+        return productRepository.findAll()
+                .stream()
+                .flatMap(p -> p.getRatings().stream())
+                .map(RatingDTO::new)
+                .toArray(RatingDTO[]::new);
     }
 }

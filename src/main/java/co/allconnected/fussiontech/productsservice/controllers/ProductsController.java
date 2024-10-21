@@ -179,12 +179,27 @@ public class ProductsController {
     @PostMapping("/{id_product}/rating")
     public ResponseEntity<?> addRating(@PathVariable String id_product, @RequestBody RatingCreateDTO ratingCreateDTO){
         try {
-            RatingDTO ratingDTO = productService.addRating(id_product, ratingCreateDTO);
+            System.out.println(ratingCreateDTO.userId());
+            System.out.println(ratingCreateDTO.productId());
+            System.out.println(ratingCreateDTO.rating());
+            RatingDTO ratingDTO = productService.rateProduct(id_product, ratingCreateDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(ratingDTO);
         } catch (OperationException e) {
             return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/rating")
+    public ResponseEntity<?> getRatings(){
+        try {
+            RatingDTO[] listRatingsDTO = productService.getAllRating();
+            return ResponseEntity.status(HttpStatus.OK).body(listRatingsDTO);
+        } catch (OperationException e) {
+            return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()));
         }
     }
 }
