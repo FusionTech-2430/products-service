@@ -173,4 +173,18 @@ public class ProductsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()));
         }
     }
+    /*
+    RATING OPERATIONS
+     */
+    @PostMapping("/{id_product}/rating")
+    public ResponseEntity<?> addRating(@PathVariable String id_product, @RequestBody RatingCreateDTO ratingCreateDTO){
+        try {
+            RatingDTO ratingDTO = productService.addRating(id_product, ratingCreateDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(ratingDTO);
+        } catch (OperationException e) {
+            return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
+        }
+    }
 }

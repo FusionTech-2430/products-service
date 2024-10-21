@@ -53,4 +53,6 @@ public class Product {
     @ManyToMany(mappedBy = "products")
     private Set<Label> labels = new LinkedHashSet<>();
 
+    @OneToMany(mappedBy = "idProduct")
+    private Set<Rating> ratings = new LinkedHashSet<>();
 }

@@ -1,10 +1,8 @@
 package co.allconnected.fussiontech.productsservice.services;
-import co.allconnected.fussiontech.productsservice.dtos.ProductCreateDTO;
-import co.allconnected.fussiontech.productsservice.dtos.ProductDTO;
-import co.allconnected.fussiontech.productsservice.dtos.ReportedProductCreateDTO;
-import co.allconnected.fussiontech.productsservice.dtos.ReportedProductDTO;
+import co.allconnected.fussiontech.productsservice.dtos.*;
 import co.allconnected.fussiontech.productsservice.model.Label;
 import co.allconnected.fussiontech.productsservice.model.Product;
+import co.allconnected.fussiontech.productsservice.model.Rating;
 import co.allconnected.fussiontech.productsservice.model.ReportedProduct;
 import co.allconnected.fussiontech.productsservice.repository.LabelRepository;
 import co.allconnected.fussiontech.productsservice.repository.ProductLabelRepository;
@@ -206,7 +204,6 @@ public class ProductService {
         }
     }
 
-
     public void deleteReport (String idProduct){
         Optional<ReportedProduct> reportOptional = reportsRepository.findById(String.valueOf(Integer.parseInt(idProduct)));
         if (reportOptional.isPresent()){
@@ -226,5 +223,21 @@ public class ProductService {
                 .stream()
                 .map(ReportedProductDTO::new)
                 .toArray(ReportedProductDTO[]::new);
+    }
+
+    /*
+    OPERATIONS RATINGS
+     */
+    public RatingDTO addRating (String idProduct, RatingCreateDTO rating) {
+        Optional<Product> productOptional = productRepository.findById(idProduct);
+        if (productOptional.isPresent()) {
+            Product product = productOptional.get();
+            Rating ratingCreate = new Rating(rating);
+            product.getRatings().add(ratingCreate);
+            productRepository.save(product);
+            return new RatingDTO(ratingCreate);
+        } else {
+            throw new OperationException(404, "Product not found");
+        }
     }
 }
