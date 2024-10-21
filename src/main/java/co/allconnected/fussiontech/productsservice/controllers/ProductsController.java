@@ -18,20 +18,19 @@ public class ProductsController {
     public ProductsController(ProductService productService) {
         this.productService = productService;
     }
-
     /*
     CRUD PRODUCTS
      */
     @PostMapping
-    public ResponseEntity<ProductDTO> createProduct(@ModelAttribute ProductCreateDTO product, @RequestParam(value = "photo", required = false) MultipartFile photo) {
+    public ResponseEntity<?> createProduct(@ModelAttribute ProductCreateDTO product, @RequestParam(value = "photo", required = false) MultipartFile photo) {
         try {
             System.out.println(product.idBusiness());
             ProductDTO productDTO = productService.createProduct(product, photo);
             return ResponseEntity.status(HttpStatus.CREATED).body(productDTO);
+        } catch (OperationException e) {
+            return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
         }
     }
     @PutMapping("/{id}")
@@ -44,7 +43,6 @@ public class ProductsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
         }
     }
-
     @GetMapping("/{id}")
     public ResponseEntity<?> getProduct(@PathVariable String id) {
         try {
@@ -59,8 +57,6 @@ public class ProductsController {
     public ResponseEntity<?> getProductsByBusiness(@PathVariable String id_business) {
         try {
             ProductDTO[] listProductsDTO = productService.getProductsByBusiness(id_business);
-            if (listProductsDTO.length == 0)
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response(HttpStatus.NOT_FOUND.value(), "No products found"));
             return ResponseEntity.status(HttpStatus.OK).body(listProductsDTO);
         } catch (OperationException e) {
             return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
@@ -72,8 +68,6 @@ public class ProductsController {
     public ResponseEntity<?> getProducts() {
         try {
             ProductDTO[] listProductsDTO = productService.getProducts();
-            if (listProductsDTO.length == 0)
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response(HttpStatus.NOT_FOUND.value(), "No products found"));
             return ResponseEntity.status(HttpStatus.OK).body(listProductsDTO);
         } catch (OperationException e) {
             return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
@@ -101,7 +95,7 @@ public class ProductsController {
         try {
             productService.assignLabelToProduct(id_product, id_label);
             return ResponseEntity.status(HttpStatus.OK)
-                    .body("Label assigned to product successfully.");
+                    .body(new Response(HttpStatus.OK.value(), "Label assigned to product successfully."));
         } catch (OperationException e) {
             return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
         } catch (Exception e) {
@@ -113,7 +107,7 @@ public class ProductsController {
         try {
             productService.deleteLabelFromProduct(id_product, id_label);
             return ResponseEntity.status(HttpStatus.OK)
-                    .body("Label deleted from product successfully.");
+                    .body(new Response(HttpStatus.OK.value(), "Label deleted from product successfully."));
         } catch (OperationException e) {
             return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
         } catch (Exception e) {
