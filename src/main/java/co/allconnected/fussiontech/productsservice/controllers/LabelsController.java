@@ -59,8 +59,6 @@ public class LabelsController {
     public ResponseEntity<?> getLabels() {
         try {
             LabelDTO[] listLabelsDTO = labelService.getLabels();
-            if (listLabelsDTO.length == 0)
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response(HttpStatus.NOT_FOUND.value(), "No labels found"));
             return ResponseEntity.status(HttpStatus.OK).body(listLabelsDTO);
         } catch (OperationException e) {
             return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));

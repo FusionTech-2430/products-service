@@ -44,7 +44,6 @@ public class ProductsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
         }
     }
-
     @GetMapping("/{id}")
     public ResponseEntity<?> getProduct(@PathVariable String id) {
         try {
@@ -101,7 +100,7 @@ public class ProductsController {
         try {
             productService.assignLabelToProduct(id_product, id_label);
             return ResponseEntity.status(HttpStatus.OK)
-                    .body("Label assigned to product successfully.");
+                    .body(new Response(HttpStatus.OK.value(), "Label assigned to product successfully."));
         } catch (OperationException e) {
             return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
         } catch (Exception e) {
