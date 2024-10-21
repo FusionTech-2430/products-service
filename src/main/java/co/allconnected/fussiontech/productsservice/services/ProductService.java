@@ -7,11 +7,13 @@ import co.allconnected.fussiontech.productsservice.model.Label;
 import co.allconnected.fussiontech.productsservice.model.Product;
 import co.allconnected.fussiontech.productsservice.model.ReportedProduct;
 import co.allconnected.fussiontech.productsservice.repository.LabelRepository;
+import co.allconnected.fussiontech.productsservice.repository.ProductLabelRepository;
 import co.allconnected.fussiontech.productsservice.repository.ProductRepository;
 import co.allconnected.fussiontech.productsservice.repository.ReportsRepository;
 import co.allconnected.fussiontech.productsservice.utils.OperationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.Instant;
@@ -24,13 +26,15 @@ public class ProductService {
     private final FirebaseService firebaseService;
     private final LabelRepository labelRepository;
     private final ReportsRepository reportsRepository;
+    private final ProductLabelRepository productLabelRepository;
 
     @Autowired
-    public ProductService(ProductRepository productRepository, LabelRepository labelRepository, ReportsRepository reportsRepository, FirebaseService firebaseService) {
+    public ProductService(ProductRepository productRepository, LabelRepository labelRepository, ReportsRepository reportsRepository, FirebaseService firebaseService, ProductLabelRepository productLabelRepository) {
         this.productRepository = productRepository;
         this.firebaseService = firebaseService;
         this.labelRepository = labelRepository;
         this.reportsRepository = reportsRepository;
+        this.productLabelRepository = productLabelRepository;
     }
 
     /*
@@ -39,22 +43,21 @@ public class ProductService {
     // Create a product
     public ProductDTO createProduct(ProductCreateDTO productDto, MultipartFile photo) throws IOException {
         Product product = new Product(productDto);
-        // System.out.println("Product name: " + productDto.name());
         try {
+            ProductDTO dto = new ProductDTO(productRepository.save(product));
             if (photo != null && !photo.isEmpty()) {
                 String extension = photo.getContentType();
                 assert extension != null;
-                extension = extension.substring(6);
-                product.setPhotoUrl(firebaseService.uploadImgProduct(String.valueOf(product.getIdBusiness()), product.getName(), extension, photo));
-            }
-        } catch (Exception e) {
-            e.printStackTrace(); // Asegúrate de que cualquier error relacionado con la subida de la foto se capture y se imprima.
-        }
 
-        try {
-            return new ProductDTO(productRepository.save(product));
+                extension = extension.substring(6);
+                product.setPhotoUrl(firebaseService.uploadImgProduct(String.valueOf(dto.getIdBusiness()), dto.getId().toString(), extension, photo));
+                dto.setPhotoUrl(product.getPhotoUrl());
+
+                // Save again, but now the product with the photoUrl
+                productRepository.save(product);
+            }
+            return dto;
         } catch (Exception e) {
-            e.printStackTrace(); // Asegúrate de que cualquier error relacionado con la base de datos se capture y se imprima.
             throw new IOException("Error al guardar el producto", e); // Lanza una excepción si es necesario.
         }
     }
@@ -71,9 +74,10 @@ public class ProductService {
 
             if (photo != null && !photo.isEmpty()) {
                 if (product.getPhotoUrl() != null) {
-                    firebaseService.deleteImgProduct(String.valueOf(product.getIdBusiness()),product.getName());
+                    firebaseService.deleteImgProduct(String.valueOf(product.getIdBusiness()), product.getId().toString());
                 }
                 String extension = photo.getContentType();
+
                 // Quit the prefix image/ from the extension
                 assert extension != null;
                 extension = extension.substring(6);
@@ -84,20 +88,17 @@ public class ProductService {
             throw new OperationException(404, "Product not found");
         }
     }
-    // Get a product by id
     public ProductDTO getProduct(String id) {
         return productRepository.findById(id)
                 .map(ProductDTO::new)
                 .orElseThrow(() -> new OperationException(404, "Product not found"));
     }
-    // Get all products
     public ProductDTO [] getProducts (){
         return productRepository.findAll()
                 .stream()
                 .map(ProductDTO::new)
                 .toArray(ProductDTO[]::new);
     }
-    // Get all products from a business
     public ProductDTO [] getProductsByBusiness(String businessId) {
         return productRepository.findByIdBusiness(UUID.fromString(businessId))
                 .stream()
@@ -105,14 +106,18 @@ public class ProductService {
                 .toArray(ProductDTO[]::new);
     }
 
-    // Delete a product
+
+    @Transactional
     public void deleteProduct(String id) {
         Optional<Product> productOptional = productRepository.findById(id);
         if (productOptional.isPresent()) {
             Product product = productOptional.get();
             if (product.getPhotoUrl() != null) {
-                firebaseService.deleteImgProduct(product.getName(), product.getId().toString());
+                firebaseService.deleteImgProduct(String.valueOf(product.getIdBusiness()), product.getId().toString());
             }
+
+            productLabelRepository.deleteByIdAnnouncement(product);
+
             productRepository.delete(product);
         } else {
             throw new OperationException(404, "Product not found");

@@ -1,5 +1,7 @@
 package co.allconnected.fussiontech.productsservice.services;
 
+import co.allconnected.fussiontech.productsservice.utils.OperationException;
+import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
 import com.google.firebase.cloud.StorageClient;
 import org.springframework.stereotype.Service;
@@ -17,9 +19,15 @@ public class FirebaseService {
         return bucket.get("business_photos/"+idBusiness+"/products/"+idProduct)
                 .signUrl(360, java.util.concurrent.TimeUnit.DAYS).toString();
     }
-
     public void deleteImgProduct(String idBusiness, String idProduct) {
         Bucket bucket = StorageClient.getInstance().bucket();
-        bucket.get("business_photos/"+idBusiness+"/products/"+idProduct).delete();
+        Blob blob = bucket.get("business_photos/"+idBusiness+"/products/"+idProduct);
+
+        if (blob != null) {
+            blob.delete();
+        } else {
+            throw new OperationException(404, "Image file not found in the bucket");
+        }
     }
+
 }

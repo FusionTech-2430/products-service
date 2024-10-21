@@ -28,11 +28,9 @@ public class LabelsController {
             LabelDTO labelDTO = labelService.createLabel(name);
             return ResponseEntity.status(HttpStatus.CREATED).body(labelDTO);
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
-
     @PutMapping("/{id}")
     public ResponseEntity<?> updateLabel(@PathVariable String id, @RequestParam String name) {
         try {
@@ -43,7 +41,6 @@ public class LabelsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
         }
     }
-
     @GetMapping("/{id}")
     public ResponseEntity<?> getLabel(@PathVariable String id) {
         try {
