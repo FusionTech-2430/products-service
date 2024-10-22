@@ -1,15 +1,10 @@
 package co.allconnected.fussiontech.productsservice.services;
-import co.allconnected.fussiontech.productsservice.dtos.ProductCreateDTO;
-import co.allconnected.fussiontech.productsservice.dtos.ProductDTO;
-import co.allconnected.fussiontech.productsservice.dtos.ReportedProductCreateDTO;
-import co.allconnected.fussiontech.productsservice.dtos.ReportedProductDTO;
+import co.allconnected.fussiontech.productsservice.dtos.*;
 import co.allconnected.fussiontech.productsservice.model.Label;
 import co.allconnected.fussiontech.productsservice.model.Product;
+import co.allconnected.fussiontech.productsservice.model.Rating;
 import co.allconnected.fussiontech.productsservice.model.ReportedProduct;
-import co.allconnected.fussiontech.productsservice.repository.LabelRepository;
-import co.allconnected.fussiontech.productsservice.repository.ProductLabelRepository;
-import co.allconnected.fussiontech.productsservice.repository.ProductRepository;
-import co.allconnected.fussiontech.productsservice.repository.ReportsRepository;
+import co.allconnected.fussiontech.productsservice.repository.*;
 import co.allconnected.fussiontech.productsservice.utils.OperationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,14 +22,16 @@ public class ProductService {
     private final LabelRepository labelRepository;
     private final ReportsRepository reportsRepository;
     private final ProductLabelRepository productLabelRepository;
+    private final RatingRepository ratingRepository;
 
     @Autowired
-    public ProductService(ProductRepository productRepository, LabelRepository labelRepository, ReportsRepository reportsRepository, FirebaseService firebaseService, ProductLabelRepository productLabelRepository) {
+    public ProductService(ProductRepository productRepository, LabelRepository labelRepository,  FirebaseService firebaseService, ProductLabelRepository productLabelRepository, RatingRepository ratingRepository, ReportsRepository reportsRepository) {
         this.productRepository = productRepository;
         this.firebaseService = firebaseService;
         this.labelRepository = labelRepository;
         this.reportsRepository = reportsRepository;
         this.productLabelRepository = productLabelRepository;
+        this.ratingRepository = ratingRepository;
     }
 
     /*
@@ -206,7 +203,6 @@ public class ProductService {
         }
     }
 
-
     public void deleteReport (String idProduct){
         Optional<ReportedProduct> reportOptional = reportsRepository.findById(String.valueOf(Integer.parseInt(idProduct)));
         if (reportOptional.isPresent()){
@@ -226,5 +222,69 @@ public class ProductService {
                 .stream()
                 .map(ReportedProductDTO::new)
                 .toArray(ReportedProductDTO[]::new);
+    }
+
+    /*
+    OPERATIONS RATINGS
+     */
+    public RatingDTO rateProduct(String productId, RatingCreateDTO ratingDTO) {
+        Optional<Product> productOptional = productRepository.findById(productId);
+        if (productOptional.isPresent()) {
+            Product product = productOptional.get();
+            Rating rating = new Rating(ratingDTO);
+            rating.setIdProduct(product);
+            rating.setDate(Instant.now());
+            Rating savedRating = ratingRepository.save(rating);
+
+            product.getRatings().add(savedRating);
+            productRepository.save(product);
+
+            return new RatingDTO(savedRating);
+        } else {
+            throw new OperationException(404, "Product not found");
+        }
+    }
+    public RatingDTO [] getAllRating(){
+        return productRepository.findAll()
+                .stream()
+                .flatMap(p -> p.getRatings().stream())
+                .map(RatingDTO::new)
+                .toArray(RatingDTO[]::new);
+    }
+    public float getAverageRating(String productId) {
+        Optional<Product> productOptional = productRepository.findById(productId);
+        if (productOptional.isPresent()) {
+            Product product = productOptional.get();
+            // Get the float average
+            double suma = product.getRatings().stream()
+                    .mapToDouble(Rating::getRating)
+                    .sum();
+            return (float) suma / product.getRatings().size();
+        } else {
+            throw new OperationException(404, "Product not found");
+        }
+    }
+    public RatingDTO [] getRatingByProduct(String productId){
+        Optional<Product> product = productRepository.findById(productId);
+        if (product.isEmpty()){
+            throw new OperationException(404, "Product not found");
+        }
+        return ratingRepository.findByIdProduct(product.get())
+                .stream()
+                .map(RatingDTO::new)
+                .toArray(RatingDTO[]::new);
+    }
+
+    public void deleteRating(String idRating) {
+        Optional<Rating> ratingOptional = ratingRepository.findById(Integer.parseInt(idRating));
+        if (ratingOptional.isPresent()) {
+            Rating rating = ratingOptional.get();
+            Product product = rating.getIdProduct();
+            product.getRatings().remove(rating);
+            productRepository.save(product);
+            ratingRepository.delete(rating);
+        } else {
+            throw new OperationException(404, "Rating not found");
+        }
     }
 }
