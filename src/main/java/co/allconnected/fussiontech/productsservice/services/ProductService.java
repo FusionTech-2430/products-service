@@ -251,7 +251,6 @@ public class ProductService {
                 .map(RatingDTO::new)
                 .toArray(RatingDTO[]::new);
     }
-
     public float getAverageRating(String productId) {
         Optional<Product> productOptional = productRepository.findById(productId);
         if (productOptional.isPresent()) {
@@ -264,5 +263,15 @@ public class ProductService {
         } else {
             throw new OperationException(404, "Product not found");
         }
+    }
+    public RatingDTO [] getRatingByProduct(String productId){
+        Optional<Product> product = productRepository.findById(productId);
+        if (product.isEmpty()){
+            throw new OperationException(404, "Product not found");
+        }
+        return ratingRepository.findByIdProduct(product.get())
+                .stream()
+                .map(RatingDTO::new)
+                .toArray(RatingDTO[]::new);
     }
 }

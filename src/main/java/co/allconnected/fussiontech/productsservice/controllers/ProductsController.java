@@ -217,4 +217,16 @@ public class ProductsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()));
         }
     }
+
+    @GetMapping("/{id_product}/rating")
+    public ResponseEntity<?> getRatingsByProduct(@PathVariable String id_product){
+        try {
+            RatingDTO[] listRatingsDTO = productService.getRatingByProduct(id_product);
+            return ResponseEntity.status(HttpStatus.OK).body(listRatingsDTO);
+        } catch (OperationException e) {
+            return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()));
+        }
+    }
 }
