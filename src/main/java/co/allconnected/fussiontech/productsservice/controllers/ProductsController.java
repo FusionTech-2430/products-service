@@ -179,9 +179,12 @@ public class ProductsController {
     @PostMapping("/{id_product}/rating")
     public ResponseEntity<?> addRating(@PathVariable String id_product, @RequestBody RatingCreateDTO ratingCreateDTO){
         try {
+            /*
             System.out.println(ratingCreateDTO.userId());
             System.out.println(ratingCreateDTO.productId());
             System.out.println(ratingCreateDTO.rating());
+
+             */
             RatingDTO ratingDTO = productService.rateProduct(id_product, ratingCreateDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(ratingDTO);
         } catch (OperationException e) {
@@ -196,6 +199,18 @@ public class ProductsController {
         try {
             RatingDTO[] listRatingsDTO = productService.getAllRating();
             return ResponseEntity.status(HttpStatus.OK).body(listRatingsDTO);
+        } catch (OperationException e) {
+            return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{id_product}/rating/average")
+    public ResponseEntity<?> getRating(@PathVariable String id_product){
+        try {
+            float rating = productService.getAverageRating(id_product);
+            return ResponseEntity.status(HttpStatus.OK).body(new Response(HttpStatus.OK.value(), "Average rating: " + rating));
         } catch (OperationException e) {
             return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
         } catch (RuntimeException e) {

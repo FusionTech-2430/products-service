@@ -251,4 +251,18 @@ public class ProductService {
                 .map(RatingDTO::new)
                 .toArray(RatingDTO[]::new);
     }
+
+    public float getAverageRating(String productId) {
+        Optional<Product> productOptional = productRepository.findById(productId);
+        if (productOptional.isPresent()) {
+            Product product = productOptional.get();
+            // Get the float average
+            double suma = product.getRatings().stream()
+                    .mapToDouble(Rating::getRating)
+                    .sum();
+            return (float) suma / product.getRatings().size();
+        } else {
+            throw new OperationException(404, "Product not found");
+        }
+    }
 }
