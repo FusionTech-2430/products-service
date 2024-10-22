@@ -274,4 +274,17 @@ public class ProductService {
                 .map(RatingDTO::new)
                 .toArray(RatingDTO[]::new);
     }
+
+    public void deleteRating(String idRating) {
+        Optional<Rating> ratingOptional = ratingRepository.findById(Integer.parseInt(idRating));
+        if (ratingOptional.isPresent()) {
+            Rating rating = ratingOptional.get();
+            Product product = rating.getIdProduct();
+            product.getRatings().remove(rating);
+            productRepository.save(product);
+            ratingRepository.delete(rating);
+        } else {
+            throw new OperationException(404, "Rating not found");
+        }
+    }
 }

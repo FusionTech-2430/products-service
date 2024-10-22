@@ -176,7 +176,7 @@ public class ProductsController {
     /*
     RATING OPERATIONS
      */
-    @PostMapping("/{id_product}/rating")
+    @PostMapping("/rating/{id_product}")
     public ResponseEntity<?> addRating(@PathVariable String id_product, @RequestBody RatingCreateDTO ratingCreateDTO){
         try {
             /*
@@ -206,7 +206,7 @@ public class ProductsController {
         }
     }
 
-    @GetMapping("/{id_product}/rating/average")
+    @GetMapping("/rating/{id_product}/average")
     public ResponseEntity<?> getRating(@PathVariable String id_product){
         try {
             float rating = productService.getAverageRating(id_product);
@@ -218,7 +218,7 @@ public class ProductsController {
         }
     }
 
-    @GetMapping("/{id_product}/rating")
+    @GetMapping("/rating/{id_product}")
     public ResponseEntity<?> getRatingsByProduct(@PathVariable String id_product){
         try {
             RatingDTO[] listRatingsDTO = productService.getRatingByProduct(id_product);
@@ -227,6 +227,17 @@ public class ProductsController {
             return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()));
+        }
+    }
+    @DeleteMapping("/rating/{id_rating}")
+    public ResponseEntity<?> deleteRating (@PathVariable String id_rating){
+        try {
+            productService.deleteRating(id_rating);
+            return ResponseEntity.status(HttpStatus.OK).body(new Response(HttpStatus.OK.value(), "Rating deleted"));
+        } catch (OperationException e) {
+            return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
         }
     }
 }
