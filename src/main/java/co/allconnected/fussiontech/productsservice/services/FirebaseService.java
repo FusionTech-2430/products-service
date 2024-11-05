@@ -25,8 +25,6 @@ public class FirebaseService {
 
         if (blob != null) {
             blob.delete();
-        } else {
-            throw new OperationException(404, "Image file not found in the bucket");
         }
     }
 
