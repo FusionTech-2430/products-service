@@ -1,4 +1,6 @@
 package co.allconnected.fussiontech.productsservice.dtos;
 
-public record ProductCreateDTO (String idBusiness, String name, String description, int stock, float price, String status ){
+import java.util.UUID;
+
+public record ProductCreateDTO (UUID idBusiness, String name, String description, Integer stock, Double price, String status) {
 }

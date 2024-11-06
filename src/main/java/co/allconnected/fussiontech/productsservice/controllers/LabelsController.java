@@ -20,28 +20,27 @@ public class LabelsController {
     }
 
     @PostMapping
-    public ResponseEntity<LabelDTO> createLabel(String name) {
-        try{
+    public ResponseEntity<LabelDTO> createLabel(@RequestParam String name) {
+        try {
+            if (name == null || name.trim().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Manejo del error si 'name' es nulo o vacío
+            }
             LabelDTO labelDTO = labelService.createLabel(name);
             return ResponseEntity.status(HttpStatus.CREATED).body(labelDTO);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
-
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateLabel (@PathVariable String id, @ModelAttribute LabelDTO labelDTO){
-        try{
-            return ResponseEntity.status(HttpStatus.OK).body(labelService.updateLabel(id, labelDTO));
-        }
-        catch (OperationException e) {
+    public ResponseEntity<?> updateLabel(@PathVariable String id, @RequestParam String name) {
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(labelService.updateLabel(id, name));
+        } catch (OperationException e) {
             return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error occurred: " + e.getMessage()));
         }
     }
-
     @GetMapping("/{id}")
     public ResponseEntity<?> getLabel(@PathVariable String id) {
         try {
@@ -57,8 +56,6 @@ public class LabelsController {
     public ResponseEntity<?> getLabels() {
         try {
             LabelDTO[] listLabelsDTO = labelService.getLabels();
-            if (listLabelsDTO.length == 0)
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response(HttpStatus.NOT_FOUND.value(), "No labels found"));
             return ResponseEntity.status(HttpStatus.OK).body(listLabelsDTO);
         } catch (OperationException e) {
             return ResponseEntity.status(e.getCode()).body(new Response(e.getCode(), e.getMessage()));

@@ -1,17 +1,14 @@
 package co.allconnected.fussiontech.productsservice.services;
-import co.allconnected.fussiontech.productsservice.dtos.ProductCreateDTO;
-import co.allconnected.fussiontech.productsservice.dtos.ProductDTO;
-import co.allconnected.fussiontech.productsservice.dtos.ReportedProductCreateDTO;
-import co.allconnected.fussiontech.productsservice.dtos.ReportedProductDTO;
+import co.allconnected.fussiontech.productsservice.dtos.*;
 import co.allconnected.fussiontech.productsservice.model.Label;
 import co.allconnected.fussiontech.productsservice.model.Product;
+import co.allconnected.fussiontech.productsservice.model.Rating;
 import co.allconnected.fussiontech.productsservice.model.ReportedProduct;
-import co.allconnected.fussiontech.productsservice.repository.LabelRepository;
-import co.allconnected.fussiontech.productsservice.repository.ProductRepository;
-import co.allconnected.fussiontech.productsservice.repository.ReportsRepository;
+import co.allconnected.fussiontech.productsservice.repository.*;
 import co.allconnected.fussiontech.productsservice.utils.OperationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.Instant;
@@ -24,13 +21,17 @@ public class ProductService {
     private final FirebaseService firebaseService;
     private final LabelRepository labelRepository;
     private final ReportsRepository reportsRepository;
+    private final ProductLabelRepository productLabelRepository;
+    private final RatingRepository ratingRepository;
 
     @Autowired
-    public ProductService(ProductRepository productRepository, LabelRepository labelRepository, ReportsRepository reportsRepository, FirebaseService firebaseService) {
+    public ProductService(ProductRepository productRepository, LabelRepository labelRepository,  FirebaseService firebaseService, ProductLabelRepository productLabelRepository, RatingRepository ratingRepository, ReportsRepository reportsRepository) {
         this.productRepository = productRepository;
         this.firebaseService = firebaseService;
         this.labelRepository = labelRepository;
         this.reportsRepository = reportsRepository;
+        this.productLabelRepository = productLabelRepository;
+        this.ratingRepository = ratingRepository;
     }
 
     /*
@@ -39,12 +40,25 @@ public class ProductService {
     // Create a product
     public ProductDTO createProduct(ProductCreateDTO productDto, MultipartFile photo) throws IOException {
         Product product = new Product(productDto);
-        if (photo != null && !photo.isEmpty()) {
-            String extension = photo.getContentType();
-            product.setPhotoUrl(firebaseService.uploadImgProduct(product.getName(), product.getId().toString(), extension, photo));
+        try {
+            ProductDTO dto = new ProductDTO(productRepository.save(product));
+            if (photo != null && !photo.isEmpty()) {
+                String extension = photo.getContentType();
+                assert extension != null;
+
+                extension = extension.substring(6);
+                product.setPhotoUrl(firebaseService.uploadImgProduct(String.valueOf(dto.getIdBusiness()), dto.getId().toString(), extension, photo));
+                dto.setPhotoUrl(product.getPhotoUrl());
+
+                // Save again, but now the product with the photoUrl
+                productRepository.save(product);
+            }
+            return dto;
+        } catch (Exception e) {
+            throw new IOException("Error creating the product", e);
         }
-        return new ProductDTO(productRepository.save(product));
     }
+
     // Update a product
     public ProductDTO updateProduct(String id, ProductCreateDTO productDTO, MultipartFile photo) throws IOException {
         Optional<Product> productOptional = productRepository.findById(id);
@@ -57,30 +71,31 @@ public class ProductService {
 
             if (photo != null && !photo.isEmpty()) {
                 if (product.getPhotoUrl() != null) {
-                    firebaseService.deleteImgProduct(product.getName(), product.getId().toString());
+                    firebaseService.deleteImgProduct(String.valueOf(product.getIdBusiness()), product.getId().toString());
                 }
                 String extension = photo.getContentType();
-                product.setPhotoUrl(firebaseService.uploadImgProduct(product.getName(), product.getId().toString(), extension, photo));
+
+                // Quit the prefix image/ from the extension
+                assert extension != null;
+                extension = extension.substring(6);
+                product.setPhotoUrl(firebaseService.uploadImgProduct(String.valueOf(product.getIdBusiness()), product.getId().toString(), extension, photo));
             }
             return new ProductDTO(productRepository.save(product));
         } else {
             throw new OperationException(404, "Product not found");
         }
     }
-    // Get a product by id
     public ProductDTO getProduct(String id) {
         return productRepository.findById(id)
                 .map(ProductDTO::new)
                 .orElseThrow(() -> new OperationException(404, "Product not found"));
     }
-    // Get all products
     public ProductDTO [] getProducts (){
         return productRepository.findAll()
                 .stream()
                 .map(ProductDTO::new)
                 .toArray(ProductDTO[]::new);
     }
-    // Get all products from a business
     public ProductDTO [] getProductsByBusiness(String businessId) {
         return productRepository.findByIdBusiness(UUID.fromString(businessId))
                 .stream()
@@ -88,14 +103,18 @@ public class ProductService {
                 .toArray(ProductDTO[]::new);
     }
 
-    // Delete a product
+
+    @Transactional
     public void deleteProduct(String id) {
         Optional<Product> productOptional = productRepository.findById(id);
         if (productOptional.isPresent()) {
             Product product = productOptional.get();
             if (product.getPhotoUrl() != null) {
-                firebaseService.deleteImgProduct(product.getName(), product.getId().toString());
+                firebaseService.deleteImgProduct(String.valueOf(product.getIdBusiness()), product.getId().toString());
             }
+
+            productLabelRepository.deleteByIdAnnouncement(product);
+
             productRepository.delete(product);
         } else {
             throw new OperationException(404, "Product not found");
@@ -104,24 +123,26 @@ public class ProductService {
      /*
     OPERATIONS LABELS
      */
-    public void assignLabelToProduct(String productId, String labelId) {
-        Optional<Product> productOptional = productRepository.findById(productId);
-        Optional <Label> labelOptional = labelRepository.findById(labelId);
-        if (productOptional.isPresent() && labelOptional.isPresent()) {
-            Product product = productOptional.get();
-            Label label = labelOptional.get();
-            boolean relationshipExists = product.getLabels().stream()
-                    .anyMatch(l -> l.getId().equals(label.getId()));
-            if (!relationshipExists) {
-                product.getLabels().add(label);
-                productRepository.save(product);
-            } else {
-                throw new OperationException(409, "Label already assigned to product");
-            }
-        } else {
-            throw new OperationException(404, "Product or Label not found");
-        }
-    }
+     public void assignLabelToProduct(String productId, String labelId) {
+         Optional<Product> productOptional = productRepository.findById(productId);
+         Optional<Label> labelOptional = labelRepository.findById(labelId);
+         if (productOptional.isPresent() && labelOptional.isPresent()) {
+             Product product = productOptional.get();
+             Label label = labelOptional.get();
+             boolean relationshipExists = product.getLabels().stream()
+                     .anyMatch(l -> l.getId().equals(label.getId()));
+             if (!relationshipExists) {
+                 product.getLabels().add(label);
+                 label.getProducts().add(product);
+                 productRepository.save(product);
+                 labelRepository.save(label);
+             } else {
+                 throw new OperationException(409, "Label already assigned to product");
+             }
+         } else {
+             throw new OperationException(404, "Product or Label not found");
+         }
+     }
 
     public void deleteLabelFromProduct(String productId, String labelId) {
         Optional<Product> productOptional = productRepository.findById(productId);
@@ -133,7 +154,9 @@ public class ProductService {
                     .anyMatch(l -> l.getId().equals(label.getId()));
             if (relationshipExists) {
                 product.getLabels().remove(label);
+                label.getProducts().remove(product);
                 productRepository.save(product);
+                labelRepository.save(label);
             } else {
                 throw new OperationException(409, "Label not assigned to product");
             }
@@ -145,18 +168,41 @@ public class ProductService {
     /*
     OPERATIONS REPORTS
      */
-    public ReportedProductDTO reportProduct (String idProduct, ReportedProductCreateDTO reportedDTO){
-        Optional<Product> productOptional = productRepository.findById(String.valueOf(idProduct));
-        if (productOptional.isPresent()){
+    public ReportedProductDTO reportProduct(String idProduct, ReportedProductCreateDTO reportedDTO) {
+        Optional<Product> productOptional = productRepository.findById(String.valueOf(Integer.parseInt(idProduct)));
+
+        if (productOptional.isPresent()) {
+            Product product = productOptional.get();
+            System.out.println(reportedDTO.reason());
+            System.out.println(reportedDTO.description());
             ReportedProduct reportedProduct = new ReportedProduct(reportedDTO);
-            reportedProduct.setId(Integer.parseInt(idProduct));
+
+            reportedProduct.setProduct(product);
+            reportedProduct.setDescription(reportedDTO.description());
+            reportedProduct.setReason(reportedDTO.reason());
             reportedProduct.setReportDate(Instant.now());
-            return new ReportedProductDTO(reportsRepository.save(reportedProduct));
-        }
-        else {
+
+            ReportedProduct savedReportedProduct = reportsRepository.save(reportedProduct);
+
+            return new ReportedProductDTO(savedReportedProduct);
+        } else {
             throw new OperationException(404, "Product not found");
         }
     }
+
+    public ReportedProductDTO updateProductReport (String idProduct, ReportedProductCreateDTO reportedDTO){
+        Optional<ReportedProduct> reportOptional = reportsRepository.findById(String.valueOf(Integer.parseInt(idProduct)));
+        if (reportOptional.isPresent()){
+            ReportedProduct report = reportOptional.get();
+            report.setReason(reportedDTO.reason());
+            report.setDescription(reportedDTO.description());
+            return new ReportedProductDTO(reportsRepository.save(report));
+        }
+        else {
+            throw new OperationException(404, "Report not found");
+        }
+    }
+
     public void deleteReport (String idProduct){
         Optional<ReportedProduct> reportOptional = reportsRepository.findById(String.valueOf(Integer.parseInt(idProduct)));
         if (reportOptional.isPresent()){
@@ -176,5 +222,69 @@ public class ProductService {
                 .stream()
                 .map(ReportedProductDTO::new)
                 .toArray(ReportedProductDTO[]::new);
+    }
+
+    /*
+    OPERATIONS RATINGS
+     */
+    public RatingDTO rateProduct(String productId, RatingCreateDTO ratingDTO) {
+        Optional<Product> productOptional = productRepository.findById(productId);
+        if (productOptional.isPresent()) {
+            Product product = productOptional.get();
+            Rating rating = new Rating(ratingDTO);
+            rating.setIdProduct(product);
+            rating.setDate(Instant.now());
+            Rating savedRating = ratingRepository.save(rating);
+
+            product.getRatings().add(savedRating);
+            productRepository.save(product);
+
+            return new RatingDTO(savedRating);
+        } else {
+            throw new OperationException(404, "Product not found");
+        }
+    }
+    public RatingDTO [] getAllRating(){
+        return productRepository.findAll()
+                .stream()
+                .flatMap(p -> p.getRatings().stream())
+                .map(RatingDTO::new)
+                .toArray(RatingDTO[]::new);
+    }
+    public float getAverageRating(String productId) {
+        Optional<Product> productOptional = productRepository.findById(productId);
+        if (productOptional.isPresent()) {
+            Product product = productOptional.get();
+            // Get the float average
+            double suma = product.getRatings().stream()
+                    .mapToDouble(Rating::getRating)
+                    .sum();
+            return (float) suma / product.getRatings().size();
+        } else {
+            throw new OperationException(404, "Product not found");
+        }
+    }
+    public RatingDTO [] getRatingByProduct(String productId){
+        Optional<Product> product = productRepository.findById(productId);
+        if (product.isEmpty()){
+            throw new OperationException(404, "Product not found");
+        }
+        return ratingRepository.findByIdProduct(product.get())
+                .stream()
+                .map(RatingDTO::new)
+                .toArray(RatingDTO[]::new);
+    }
+
+    public void deleteRating(String idRating) {
+        Optional<Rating> ratingOptional = ratingRepository.findById(Integer.parseInt(idRating));
+        if (ratingOptional.isPresent()) {
+            Rating rating = ratingOptional.get();
+            Product product = rating.getIdProduct();
+            product.getRatings().remove(rating);
+            productRepository.save(product);
+            ratingRepository.delete(rating);
+        } else {
+            throw new OperationException(404, "Rating not found");
+        }
     }
 }
